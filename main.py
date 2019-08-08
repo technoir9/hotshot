@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 import re
 import os
 
+# WEBHOOK_URL = os.environ['HOTSHOT_WEBHOOK']
+WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
 INPUT_URL = os.environ['INPUT_URL']
 
 def simple_get(url):
@@ -40,6 +42,12 @@ def log_error(e):
     """
     print(e)
 
+def get_discount_percentage(old_price_str, new_price_str):
+    old_price = float(re.sub(r"\D", '', old_price_str))
+    new_price = float(re.sub(r"\D", '', new_price_str))
+    percentage = (old_price - new_price) / old_price * 100
+    return percentage
+
 page_content = simple_get(INPUT_URL)
 if page_content is None:
     raise Exception('Error - couldn\'t fetch the page')
@@ -48,3 +56,15 @@ product_name = html.select('#hotShot .product-name')[0].text
 image_url = html.select('#hotShot .product-impression > img')[0].get('src')
 old_price = html.select('#hotShot .old-price')[0].text
 new_price = html.select('#hotShot .new-price')[0].text
+try:
+    items_left = html.select('#hotShot .pull-left > span')[0].text
+except IndexError:
+    items_left = html.select('#hotShot .sold-info')[0].text
+
+discount_percent = get_discount_percentage(old_price, new_price)
+
+message = (
+    f"Produkt: {product_name}, stara cena: {old_price}, nowa cena: {new_price}, pozostało sztuk: {items_left}\n"
+    f"Obniżka: {discount_percent}%\n"
+    f"{image_url}")
+post(WEBHOOK_URL, data={'content': message})
