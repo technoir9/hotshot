@@ -10,7 +10,7 @@ def create_app(test_config=None):
     # Configure schedule
     sched = BackgroundScheduler(daemon=True, timezone="Europe/Warsaw")
     # sched.add_job(job, 'interval', hours=12, start_date='2019-08-09 22:00:01')
-    sched.add_job(job, 'interval', hours=1, start_date='2019-08-09 18:51:01')
+    sched.add_job(job, 'interval', hours=1, start_date='2019-08-09 18:52:01')
     sched.start()
 
     # create and configure the app
