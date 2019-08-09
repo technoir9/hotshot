@@ -46,25 +46,29 @@ def get_discount_percentage(old_price_str, new_price_str):
     old_price = float(re.sub(r"\D", '', old_price_str))
     new_price = float(re.sub(r"\D", '', new_price_str))
     percentage = (old_price - new_price) / old_price * 100
-    return percentage
+    return round(percentage, 2)
 
-page_content = simple_get(INPUT_URL)
-if page_content is None:
-    raise Exception('Error - couldn\'t fetch the page')
-html = BeautifulSoup(page_content, 'html.parser')
-product_name = html.select('#hotShot .product-name')[0].text
-image_url = html.select('#hotShot .product-impression > img')[0].get('src')
-old_price = html.select('#hotShot .old-price')[0].text
-new_price = html.select('#hotShot .new-price')[0].text
-try:
-    items_left = html.select('#hotShot .pull-left > span')[0].text
-except IndexError:
-    items_left = html.select('#hotShot .sold-info')[0].text
+def run():
+    page_content = simple_get(INPUT_URL)
+    if page_content is None:
+        raise Exception('Error - couldn\'t fetch the page')
+    html = BeautifulSoup(page_content, 'html.parser')
+    product_name = html.select('#hotShot .product-name')[0].text
+    image_url = html.select('#hotShot .product-impression > img')[0].get('src')
+    old_price = html.select('#hotShot .old-price')[0].text
+    new_price = html.select('#hotShot .new-price')[0].text
+    try:
+        items_left = html.select('#hotShot .pull-left > span')[0].text
+    except IndexError:
+        items_left = html.select('#hotShot .sold-info')[0].text
 
-discount_percent = get_discount_percentage(old_price, new_price)
+    discount_percent = get_discount_percentage(old_price, new_price)
 
-message = (
-    f"Produkt: {product_name}, stara cena: {old_price}, nowa cena: {new_price}, pozostało sztuk: {items_left}\n"
-    f"Obniżka: {discount_percent}%\n"
-    f"{image_url}")
-post(WEBHOOK_URL, data={'content': message})
+    message = (
+        f"Produkt: {product_name}, stara cena: {old_price}, nowa cena: {new_price}, pozostało sztuk: {items_left}\n"
+        f"Obniżka: {discount_percent}%\n"
+        f"{image_url}")
+    post(WEBHOOK_URL, data={'content': message})
+
+if __name__ == "__main__":
+    run()
