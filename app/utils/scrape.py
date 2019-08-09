@@ -6,8 +6,7 @@ from bs4 import BeautifulSoup
 import re
 import os
 
-# WEBHOOK_URL = os.environ['HOTSHOT_WEBHOOK']
-WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
+WEBHOOK_URL = os.environ['HOTSHOT_WEBHOOK']
 INPUT_URL = os.environ['INPUT_URL']
 
 def simple_get(url):
