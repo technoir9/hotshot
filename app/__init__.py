@@ -22,7 +22,7 @@ def create_app(test_config=None):
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
 
-    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") != "true":
         init_scheduler()
 
     if test_config is None:
