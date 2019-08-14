@@ -6,7 +6,11 @@ from bs4 import BeautifulSoup
 import re
 import os
 
-WEBHOOK_URL = os.environ['HOTSHOT_WEBHOOK']
+FLASK_ENV = os.environ['FLASK_ENV']
+if FLASK_ENV == 'production':
+    WEBHOOK_URL = os.environ['HOTSHOT_WEBHOOK']
+else:
+    WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
 INPUT_URL = os.environ['INPUT_URL']
 
 def simple_get(url):
@@ -68,6 +72,3 @@ def run():
         f"Obniżka: {discount_percent}%\n"
         f"{image_url}")
     post(WEBHOOK_URL, data={'content': message})
-
-if __name__ == "__main__":
-    run()

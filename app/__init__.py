@@ -22,9 +22,6 @@ def create_app(test_config=None):
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
 
-    if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        init_scheduler()
-
     if test_config is None:
         # load the instance config, if it exists, when not testing
         app.config.from_pyfile('config.py', silent=True)
@@ -39,3 +36,7 @@ def create_app(test_config=None):
         pass
 
     return app
+
+app = create_app()
+init_scheduler()
+app.run(use_reloader=False)
