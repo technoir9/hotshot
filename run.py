@@ -3,4 +3,5 @@ import time
 
 if __name__ == '__main__':
     schedule.init_scheduler()
-    time.sleep(30)
+    for x in range(0, 20 * 60):
+        time.sleep(1)
