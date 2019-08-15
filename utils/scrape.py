@@ -6,8 +6,8 @@ from bs4 import BeautifulSoup
 import re
 import os
 
-FLASK_ENV = os.environ['FLASK_ENV']
-if FLASK_ENV == 'production':
+SCRIPT_ENV = os.environ['SCRIPT_ENV']
+if SCRIPT_ENV == 'production':
     WEBHOOK_URL = os.environ['HOTSHOT_WEBHOOK']
 else:
     WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
