@@ -13,14 +13,14 @@ else:
     WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
 INPUT_URL = os.environ['INPUT_URL']
 
-def simple_get(url):
+def simple_get(url, headers=None):
     """
     Attempts to get the content at `url` by making an HTTP GET request.
     If the content-type of response is some kind of HTML/XML, return the
     text content, otherwise return None.
     """
     try:
-        with closing(get(url, stream=True)) as resp:
+        with closing(get(url, headers=headers, stream=True)) as resp:
             if is_good_response(resp):
                 return resp.content
             else:
@@ -52,12 +52,22 @@ def get_discount_percentage(old_price_str, new_price_str):
     return round(percentage, 2)
 
 def run():
-    page_content = simple_get(INPUT_URL)
+    headers = {
+        "accept":
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+        "accept-language": "pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "none",
+        "sec-fetch-user": "?1",
+        "upgrade-insecure-requests": "1"
+    }
+    page_content = simple_get(INPUT_URL, headers=headers)
     if page_content is None:
         raise Exception('Error - couldn\'t fetch the page')
     html = BeautifulSoup(page_content, 'html.parser')
     product_name = html.select('#hotShot .product-name')[0].text
-    image_url = html.select('#hotShot .product-impression > img')[0].get('src')
+    hotshot_script = html.select('#hotShot + script')[0].text
+    product_url = INPUT_URL + re.search(r"(goracy.+?)\"", hotshot_script)[1]
     old_price = html.select('#hotShot .old-price')[0].text
     new_price = html.select('#hotShot .new-price')[0].text
     try:
@@ -70,5 +80,5 @@ def run():
     message = (
         f"Produkt: {product_name}, stara cena: {old_price}, nowa cena: {new_price}, pozostało sztuk: {items_left}\n"
         f"Obniżka: {discount_percent}%\n"
-        f"{image_url}")
+        f"{product_url}")
     post(WEBHOOK_URL, data={'content': message})
