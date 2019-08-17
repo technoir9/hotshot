@@ -1,10 +1,12 @@
 # pylint: disable=no-member
 import re
 import os
+import time
 from requests import get, post
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
+from . import file_utils
 
 SCRIPT_ENV = os.environ['SCRIPT_ENV']
 if SCRIPT_ENV == 'production':
@@ -12,6 +14,7 @@ if SCRIPT_ENV == 'production':
 else:
     WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
 INPUT_URL = os.environ['INPUT_URL']
+WAITING_TIME = [1, 5, 30]
 
 def simple_get(url, headers=None):
     """
@@ -61,11 +64,20 @@ def run():
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1"
     }
-    page_content = simple_get(INPUT_URL, headers=headers)
-    if page_content is None:
-        raise Exception('Error - couldn\'t fetch the page')
-    html = BeautifulSoup(page_content, 'html.parser')
-    product_name = html.select('#hotShot .product-name')[0].text
+    for x in range(0, 3):
+        page_content = simple_get(INPUT_URL, headers=headers)
+        if page_content is None:
+            raise Exception('Error - couldn\'t fetch the page')
+        html = BeautifulSoup(page_content, 'html.parser')
+        product_name = html.select('#hotShot .product-name')[0].text
+        recent_product_name = file_utils.get_last_product()
+        if recent_product_name == product_name:
+            print('Product hasn\'t changed')
+            time.sleep(WAITING_TIME[x])
+        else:
+            print('New product')
+            file_utils.write_last_product(product_name)
+            break
     try:
         hotshot_script = html.select('#hotShot + script')[0].text
         product_url = INPUT_URL + re.search(r"(goracy.+?)\"", hotshot_script)[1]
