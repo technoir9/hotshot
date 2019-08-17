@@ -1,10 +1,10 @@
 # pylint: disable=no-member
+import re
+import os
 from requests import get, post
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
-import re
-import os
 
 SCRIPT_ENV = os.environ['SCRIPT_ENV']
 if SCRIPT_ENV == 'production':
@@ -66,8 +66,12 @@ def run():
         raise Exception('Error - couldn\'t fetch the page')
     html = BeautifulSoup(page_content, 'html.parser')
     product_name = html.select('#hotShot .product-name')[0].text
-    hotshot_script = html.select('#hotShot + script')[0].text
-    product_url = INPUT_URL + re.search(r"(goracy.+?)\"", hotshot_script)[1]
+    try:
+        hotshot_script = html.select('#hotShot + script')[0].text
+        product_url = INPUT_URL + re.search(r"(goracy.+?)\"", hotshot_script)[1]
+    except IndexError:
+        # image url
+        product_url = html.select('#hotShot .product-impression > img')[0].get('src')
     old_price = html.select('#hotShot .old-price')[0].text
     new_price = html.select('#hotShot .new-price')[0].text
     try:
