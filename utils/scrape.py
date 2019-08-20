@@ -14,7 +14,7 @@ if SCRIPT_ENV == 'production':
 else:
     WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
 INPUT_URL = os.environ['INPUT_URL']
-WAITING_TIME = [1, 5, 30]
+WAITING_TIME = [1, 5, 30, 90, 300]
 
 def simple_get(url, headers=None):
     """
@@ -64,20 +64,28 @@ def run():
         "sec-fetch-user": "?1",
         "upgrade-insecure-requests": "1"
     }
-    for x in range(0, 3):
+    for x in range(0, 5):
         page_content = simple_get(INPUT_URL, headers=headers)
         if page_content is None:
             raise Exception('Error - couldn\'t fetch the page')
         html = BeautifulSoup(page_content, 'html.parser')
         product_name = html.select('#hotShot .product-name')[0].text
-        recent_product_name = file_utils.get_last_product()
-        if recent_product_name == product_name:
-            print('Product hasn\'t changed')
-            time.sleep(WAITING_TIME[x])
-        else:
+        try:
+            items_left = html.select('#hotShot .pull-left > span')[0].text
             print('New product')
-            file_utils.write_last_product(product_name)
             break
+        except IndexError:
+            print('Product hasn\'t changed')
+            items_left = html.select('#hotShot .sold-info')[0].text
+            time.sleep(WAITING_TIME[x])
+        # recent_product_name = file_utils.get_last_product()
+        # if recent_product_name == product_name:
+        #     print('Product hasn\'t changed')
+        #     time.sleep(WAITING_TIME[x])
+        # else:
+        #     print('New product')
+        #     file_utils.write_last_product(product_name)
+        #     break
     try:
         hotshot_script = html.select('#hotShot + script')[0].text
         product_url = INPUT_URL + re.search(r"(goracy.+?)\"", hotshot_script)[1]
@@ -86,10 +94,6 @@ def run():
         product_url = html.select('#hotShot .product-impression > img')[0].get('src')
     old_price = html.select('#hotShot .old-price')[0].text
     new_price = html.select('#hotShot .new-price')[0].text
-    try:
-        items_left = html.select('#hotShot .pull-left > span')[0].text
-    except IndexError:
-        items_left = html.select('#hotShot .sold-info')[0].text
 
     discount_percent = get_discount_percentage(old_price, new_price)
 
