@@ -6,7 +6,6 @@ from requests import get, post
 from requests.exceptions import RequestException
 from contextlib import closing
 from bs4 import BeautifulSoup
-from . import file_utils
 
 SCRIPT_ENV = os.environ['SCRIPT_ENV']
 if SCRIPT_ENV == 'production':
