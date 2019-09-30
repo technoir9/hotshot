@@ -27,7 +27,8 @@ def hotshot_run():
     return 'Schedule initialized'
 
 # app.run(use_reloader=False)
-app.run()
+if __name__ == '__main__':
+    app.run()
 
 # def create_app(test_config=None):
 #     # create and configure the app
