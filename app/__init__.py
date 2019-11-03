@@ -4,6 +4,8 @@ from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from utils import scrape
 
+sched = BackgroundScheduler(daemon=True, timezone="Europe/Warsaw")
+
 def job():
     scrape.run(os.environ['TEMP_WEBHOOK'])
 
@@ -22,7 +24,7 @@ app.config.from_mapping(
 
 @app.route('/hotshot_run')
 def hotshot_run():
-    if not app.debug or os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    if not sched.running:
         init_scheduler()
     return 'Schedule initialized'
 
