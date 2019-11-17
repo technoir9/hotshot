@@ -94,16 +94,10 @@ def run(post_url=WEBHOOK_URL):
     old_price = html.select('#hotShot .old-price')[0].text
     new_price = html.select('#hotShot .new-price')[0].text
 
-    try:
-        time_left = re.sub(r"[\s\n]", "", html.select('#hotShot .hot-shot-timer')[0].text)
-    except IndexError:
-        time_left = ""
-
     discount_percent = get_discount_percentage(old_price, new_price)
 
     message = (
         f"Produkt: {product_name}, stara cena: {old_price}, nowa cena: {new_price}, pozostało sztuk: {items_left}\n"
         f"Obniżka: {discount_percent}%\n"
-        f"Pozostało czasu: {time_left}%\n"
         f"{product_url}")
     post(post_url, data={'content': message})
