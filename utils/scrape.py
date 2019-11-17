@@ -53,7 +53,7 @@ def get_discount_percentage(old_price_str, new_price_str):
     percentage = (old_price - new_price) / old_price * 100
     return round(percentage, 2)
 
-def run(post_url = WEBHOOK_URL):
+def run(post_url=WEBHOOK_URL):
     headers = {
         "accept":
             "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
@@ -94,10 +94,16 @@ def run(post_url = WEBHOOK_URL):
     old_price = html.select('#hotShot .old-price')[0].text
     new_price = html.select('#hotShot .new-price')[0].text
 
+    try:
+        time_left = re.sub(r"[\s\n]", "", html.select('#hotShot .hot-shot-timer')[0].text)
+    except IndexError:
+        time_left = ""
+
     discount_percent = get_discount_percentage(old_price, new_price)
 
     message = (
         f"Produkt: {product_name}, stara cena: {old_price}, nowa cena: {new_price}, pozostało sztuk: {items_left}\n"
         f"Obniżka: {discount_percent}%\n"
+        f"Pozostało czasu: {time_left}%\n"
         f"{product_url}")
     post(post_url, data={'content': message})
