@@ -6,4 +6,7 @@
 __pycache__/
 *.py[cod]
 
-recent_product.txt
+# Environment variables
+.env
+
+temp.py

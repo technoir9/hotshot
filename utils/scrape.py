@@ -5,14 +5,8 @@ import time
 from requests import get, post
 from requests.exceptions import RequestException
 from contextlib import closing
-from bs4 import BeautifulSoup
+from utils.config import SCRIPT_ENV, WEBHOOK_URL, INPUT_URL
 
-SCRIPT_ENV = os.environ['SCRIPT_ENV']
-if SCRIPT_ENV == 'production':
-    WEBHOOK_URL = os.environ['HOTSHOT_WEBHOOK']
-else:
-    WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
-INPUT_URL = os.environ['INPUT_URL']
 WAITING_TIME = [1, 5, 30, 90, 300]
 
 def simple_get(url, headers=None):
@@ -47,57 +41,32 @@ def log_error(e):
     """
     print(e)
 
-def get_discount_percentage(old_price_str, new_price_str):
-    old_price = float(re.sub(r"\D", '', old_price_str))
-    new_price = float(re.sub(r"\D", '', new_price_str))
+def get_discount_percentage(old_price, new_price):
     percentage = (old_price - new_price) / old_price * 100
     return round(percentage, 2)
 
 def run(post_url=WEBHOOK_URL):
     headers = {
-        "accept":
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
+        "accept": "application/json, text/plain, */*",
         "accept-language": "pl-PL,pl;q=0.9,en-US;q=0.8,en;q=0.7",
-        "sec-fetch-mode": "navigate",
-        "sec-fetch-site": "none",
-        "sec-fetch-user": "?1",
-        "upgrade-insecure-requests": "1"
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "time-zone": "UTC",
+        "x-api-key": "sJSgnQXySmp6pqNV"
     }
-    for x in range(0, 5):
-        page_content = simple_get(INPUT_URL, headers=headers)
-        if page_content is None:
-            raise Exception('Error - couldn\'t fetch the page')
-        html = BeautifulSoup(page_content, 'html.parser')
-        product_name = html.select('#hotShot .product-name')[0].text
-        try:
-            items_left = html.select('#hotShot .pull-left > span')[0].text
-            print('New product')
-            break
-        except IndexError:
-            print('Product hasn\'t changed')
-            items_left = html.select('#hotShot .sold-info')[0].text
-            time.sleep(WAITING_TIME[x])
-        # recent_product_name = file_utils.get_last_product()
-        # if recent_product_name == product_name:
-        #     print('Product hasn\'t changed')
-        #     time.sleep(WAITING_TIME[x])
-        # else:
-        #     print('New product')
-        #     file_utils.write_last_product(product_name)
-        #     break
-    try:
-        hotshot_script = html.select('#hotShot + script')[0].text
-        product_url = INPUT_URL + re.search(r"(goracy.+?)\"", hotshot_script)[1]
-    except IndexError:
-        # image url
-        product_url = html.select('#hotShot .product-impression > img')[0].get('src')
-    old_price = html.select('#hotShot .old-price')[0].text
-    new_price = html.select('#hotShot .new-price')[0].text
-
+    response = get(INPUT_URL, headers=headers)
+    json_response = response.json()
+    product_name = json_response['PromotionName']
+    old_price = json_response['OldPrice']
+    new_price = json_response['Price']
+    items_all = json_response['PromotionTotalCount']
+    items_left = json_response['MaxBuyCount']
     discount_percent = get_discount_percentage(old_price, new_price)
-
+    product_url = json_response['PromotionPhoto']['Url']
     message = (
-        f"Produkt: {product_name}, stara cena: {old_price}, nowa cena: {new_price}, pozostało sztuk: {items_left}\n"
+        f"Produkt: {product_name}, stara cena: {old_price}, nowa cena: {new_price}, pozostało sztuk: {items_left}/{items_all}\n"
         f"Obniżka: {discount_percent}%\n"
         f"{product_url}")
+
     post(post_url, data={'content': message})
