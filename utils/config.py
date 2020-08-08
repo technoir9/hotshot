@@ -8,3 +8,4 @@ if SCRIPT_ENV == 'production':
 else:
     WEBHOOK_URL = os.environ['TEMP_WEBHOOK']
 INPUT_URL = os.environ['INPUT_URL']
+PROXY_URL = os.environ['FIXIE_URL']
