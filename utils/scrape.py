@@ -5,7 +5,7 @@ import time
 from requests import get, post
 from requests.exceptions import RequestException
 from contextlib import closing
-from utils.config import SCRIPT_ENV, WEBHOOK_URL, INPUT_URL, PROXY_URL
+from utils.config import SCRIPT_ENV, WEBHOOK_URL, INPUT_URL
 
 WAITING_TIME = [1, 5, 30, 90, 300]
 
@@ -55,11 +55,7 @@ def run(post_url=WEBHOOK_URL):
         "time-zone": "UTC",
         "x-api-key": "sJSgnQXySmp6pqNV"
     }
-    proxies = {
-        'http': PROXY_URL,
-        'https': PROXY_URL
-    }
-    response = get(INPUT_URL, headers=headers, proxies=proxies)
+    response = get(INPUT_URL, headers=headers)
     json_response = response.json()
     product_name = json_response['PromotionName']
     old_price = json_response['OldPrice']
